@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { parseCookies, setCookie } from "nookies";
+import { signOut } from "../contexts/AuthContext";
 
 interface AxiosErrorResponse {
   code?: string;
@@ -27,7 +28,7 @@ api.interceptors.response.use(response => {
       const originalConfig = error.config
 
       if (!isRefreshing) {
-          isRefreshing = true; 
+        isRefreshing = true;
 
         api.post("/refresh", {
           refreshToken,
@@ -56,7 +57,7 @@ api.interceptors.response.use(response => {
         });
       }
 
-      return new Promise((resolve, reject) =>{
+      return new Promise((resolve, reject) => {
         failedRequestsQueue.push({
           onSucess: (token: string) => {
             originalConfig.headers["Authorization"] = `Bearer ${token}`
@@ -64,12 +65,14 @@ api.interceptors.response.use(response => {
             resolve(api(originalConfig))
           },
           onFailure: (err: AxiosError) => {
-            reject(err) 
-          } 
+            reject(err)
+          }
         })
       });
     } else {
-
+      signOut();
     }
   }
+
+  return Promise.reject(error);
 });
